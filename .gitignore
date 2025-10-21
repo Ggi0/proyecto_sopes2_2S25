@@ -1,1 +1,14 @@
 kernel_personalizado/
+
+
+#linux-6.12.41
+#   arch
+#       x86
+#           entry
+#               syscalls
+#                   syscall_64.tbl ---> tabla de syscalls
+#   kernel
+#       Makefile
+#       syscalls.c
+#   Makefile
+
