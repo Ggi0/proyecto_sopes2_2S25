@@ -1,1 +1,0 @@
-savedcmd_/home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/modules.order := {   echo /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/vmouse.o; :; } > /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/modules.order

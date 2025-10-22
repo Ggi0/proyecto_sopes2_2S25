@@ -1,1 +1,0 @@
-savedcmd_/home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/vmouse.mod := printf '%s\n'   vmouse.o | awk '!x[$$0]++ { print("/home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/"$$0) }' > /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/vmouse.mod
