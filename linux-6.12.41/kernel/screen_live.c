@@ -2,148 +2,130 @@
 #include <linux/kernel.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/vmalloc.h>
 #include <linux/fs.h>
+#include <linux/fb.h>
 #include <linux/file.h>
-#include <linux/errno.h>
-#include <linux/types.h>
+#include <linux/mm.h>
+
+/* Declaraciones externas */
+extern struct fb_info *registered_fb[FB_MAX];
+extern int num_registered_fb;
 
 struct screen_capture_info {
     __u32 width;
     __u32 height;
-    __u32 bytes_per_pixel;    /* en este ejemplo asumimos 4 (RGBA/ARGB/XRGB) por defecto */
+    __u32 bytes_per_pixel;
     __u64 buffer_size;
-    void __user *data;        /* puntero en espacio de usuario al buffer donde se escribirá */
+    void __user *data;
 };
 
-/*
- * SYSCALL: screen_live
- *
- * - Copia desde /sys/class/drm/.../modes la primera línea para obtener la resolución.
- * - Intenta abrir /dev/fb0 y leer el framebuffer crudo hasta buffer_size bytes.
- * - Copia metadata de vuelta a la estructura de usuario y copia el buffer de pixeles al puntero user->data.
- *
- * Nota: esto lee datos *crudos* de /dev/fb0; su formato depende del driver (puede ser XRGB, ARGB, BGR, etc.).
- * El espacio de usuario deberá interpretar/convertir según corresponda (p. ej. suponer XRGB8888).
- *
- * Este enfoque evita usar símbolos DRM internos que no siempre están exportados para su uso desde syscall.
- */
 SYSCALL_DEFINE1(screen_live, struct screen_capture_info __user *, capture_info_user)
 {
     struct screen_capture_info info_k;
-    struct file *f_modes = NULL;
-    struct file *f_fb = NULL;
-    char modes_buf[128];
-    ssize_t n;
-    loff_t pos;
-    __u32 w = 0, h = 0;
-    __u32 bpp = 4; /* por defecto asumimos 4 bytes/pixel (32bpp) */
+    struct file *fb_filp = NULL;
+    struct fb_info *fb_info_ptr;
+    struct inode *inode;
+    unsigned long fb_mem_size;
     void *kbuf = NULL;
     int ret = 0;
+    int fbidx;
 
     if (!capture_info_user)
         return -EFAULT;
 
-    /* copiar la estructura (la parte que el usuario haya rellenado; sobreescribiremos campos) */
     if (copy_from_user(&info_k, capture_info_user, sizeof(info_k)))
         return -EFAULT;
 
-    /* 1) leer resolución desde sysfs: (ruta típica; adapta si tu conector tiene otro nombre) */
-    f_modes = filp_open("/sys/class/drm/card0-Virtual-1/modes", O_RDONLY, 0);
-    if (IS_ERR(f_modes)) {
-        /* si no existe, intentamos la ruta genérica card0/modes como fallback */
-        f_modes = filp_open("/sys/class/drm/card0/modes", O_RDONLY, 0);
-        if (IS_ERR(f_modes)) {
-            pr_warn("screen_live: no pude abrir sysfs drm modes (/sys/class/drm/card0-Virtual-1/modes ni /sys/class/drm/card0/modes)\n");
-            ret = -ENODEV;
-            goto out;
-        }
+    /* Abrir /dev/fb0 */
+    fb_filp = filp_open("/dev/fb0", O_RDONLY, 0);
+    if (IS_ERR(fb_filp)) {
+        pr_err("screen_live: no se pudo abrir /dev/fb0\n");
+        return PTR_ERR(fb_filp);
     }
 
-    /* leer la primera línea */
-    pos = 0;
-    n = kernel_read(f_modes, modes_buf, sizeof(modes_buf) - 1, &pos);
-
-    if (n <= 0) {
-        pr_warn("screen_live: lectura modes sysfs vacía o error\n");
-        ret = -EIO;
-        goto close_modes;
-    }
-    modes_buf[n] = '\0';
-
-    /* parsear "1406x738" (formato esperado: %ux%u) */
-    if (sscanf(modes_buf, "%u x %u", &w, &h) != 2) {
-        if (sscanf(modes_buf, "%ux%u", &w, &h) != 2) {
-            pr_warn("screen_live: formato modes inesperado: '%s'\n", modes_buf);
-            ret = -EINVAL;
-            goto close_modes;
-        }
+    /* Obtener el fb_info desde el file */
+    inode = file_inode(fb_filp);
+    if (!inode) {
+        pr_err("screen_live: no se pudo obtener inode\n");
+        filp_close(fb_filp, NULL);
+        return -EINVAL;
     }
 
-    /* no quemamos la resolución en tu struct en userspace si el usuario ya puso algo,
-       pero sobreescribimos con la detectada (tal como pediste, no "quemar" para front: aquí la devolvemos). */
-    info_k.width = w;
-    info_k.height = h;
-    info_k.bytes_per_pixel = bpp;
-    info_k.buffer_size = (u64)w * (u64)h * (u64)bpp;
+    /* El minor number nos da el índice del framebuffer */
+    fbidx = iminor(inode);
+    
+    /* Verificar que el framebuffer esté registrado */
+    if (fbidx >= FB_MAX || !registered_fb[fbidx]) {
+        pr_err("screen_live: framebuffer no registrado\n");
+        filp_close(fb_filp, NULL);
+        return -ENODEV;
+    }
 
-    /* 2) reservar buffer kernel temporal */
-    kbuf = kmalloc(info_k.buffer_size, GFP_KERNEL);
+    fb_info_ptr = registered_fb[fbidx];
+
+    /* Obtener dimensiones y formato */
+    info_k.width = fb_info_ptr->var.xres;
+    info_k.height = fb_info_ptr->var.yres;
+    info_k.bytes_per_pixel = fb_info_ptr->var.bits_per_pixel / 8;
+    
+    /* Calcular tamaño del buffer */
+    fb_mem_size = fb_info_ptr->fix.smem_len;
+    if (fb_mem_size == 0) {
+        fb_mem_size = (unsigned long)info_k.width * info_k.height * info_k.bytes_per_pixel;
+    }
+    info_k.buffer_size = fb_mem_size;
+
+    /* Verificar que hay memoria mapeada */
+    if (!fb_info_ptr->screen_base && !fb_info_ptr->screen_buffer) {
+        pr_err("screen_live: no hay memoria de framebuffer disponible\n");
+        filp_close(fb_filp, NULL);
+        return -ENOMEM;
+    }
+
+    /* Alocar buffer temporal en kernel */
+    kbuf = vmalloc(fb_mem_size);
     if (!kbuf) {
-        ret = -ENOMEM;
-        goto close_modes;
-    }
-    memset(kbuf, 0, info_k.buffer_size);
-
-    /* 3) intentar abrir /dev/fb0 y leer su contenido en kbuf */
-    f_fb = filp_open("/dev/fb0", O_RDONLY, 0);
-    if (IS_ERR(f_fb)) {
-        pr_warn("screen_live: no se pudo abrir /dev/fb0 (driver fb absent o no exportado). errno=%ld\n", PTR_ERR(f_fb));
-        ret = -ENODEV;
-        goto free_kbuf;
+        pr_err("screen_live: no se pudo alocar buffer temporal\n");
+        filp_close(fb_filp, NULL);
+        return -ENOMEM;
     }
 
-    /* leer hasta buffer_size bytes (lectura cruda; algunos drivers fb soportan lectura directa) */
-    pos = 0;
-    n = kernel_read(f_fb, kbuf, (size_t)info_k.buffer_size, &pos);
-
-
-    if (n < 0) {
-        pr_warn("screen_live: error leyendo /dev/fb0: %zd\n", n);
-        ret = (int)n;
-        goto close_fb;
+    /* Copiar datos del framebuffer al buffer temporal */
+    if (fb_info_ptr->screen_base) {
+        /* Memoria mapeada IO */
+        memcpy_fromio(kbuf, fb_info_ptr->screen_base, fb_mem_size);
+    } else if (fb_info_ptr->screen_buffer) {
+        /* Memoria normal */
+        memcpy(kbuf, fb_info_ptr->screen_buffer, fb_mem_size);
     }
-    /* si la lectura devolvió menos bytes, ajustamos buffer_size para no copiar basura */
-    if ((size_t)n < info_k.buffer_size)
-        info_k.buffer_size = n;
 
-    /* 4) copiar metadata actualizada a espacio de usuario */
+    /* Copiar metadata al espacio de usuario */
     if (copy_to_user(capture_info_user, &info_k, sizeof(info_k))) {
+        pr_err("screen_live: fallo al copiar metadata\n");
         ret = -EFAULT;
-        goto close_fb;
+        goto cleanup;
     }
 
-    /* 5) copiar los bytes crudos leídos al buffer de usuario indicado por capture_info_user->data */
+    /* Copiar datos de imagen al buffer de usuario */
     if (!info_k.data) {
-        pr_warn("screen_live: puntero data en user struct es NULL\n");
+        pr_warn("screen_live: puntero data es NULL\n");
         ret = -EFAULT;
-        goto close_fb;
+        goto cleanup;
     }
 
-    if (copy_to_user(info_k.data, kbuf, (size_t)info_k.buffer_size)) {
-        pr_warn("screen_live: fallo copy_to_user para buffer de pixeles\n");
+    if (copy_to_user(info_k.data, kbuf, fb_mem_size)) {
+        pr_err("screen_live: fallo al copiar datos de imagen\n");
         ret = -EFAULT;
-        goto close_fb;
+        goto cleanup;
     }
 
-    pr_info("screen_live: leído %llu bytes de /dev/fb0 (res %ux%u, bpp=%u)\n",
-            (unsigned long long)info_k.buffer_size, info_k.width, info_k.height, info_k.bytes_per_pixel);
+    pr_info("screen_live: captura exitosa %ux%u bpp=%u (%llu bytes)\n",
+            info_k.width, info_k.height, info_k.bytes_per_pixel, 
+            (unsigned long long)fb_mem_size);
 
-close_fb:
-    filp_close(f_fb, NULL);
-free_kbuf:
-    kfree(kbuf);
-close_modes:
-    filp_close(f_modes, NULL);
-out:
+cleanup:
+    vfree(kbuf);
+    filp_close(fb_filp, NULL);
     return ret;
 }
