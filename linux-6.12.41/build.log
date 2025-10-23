@@ -1,0 +1,27 @@
+  DESCEND objtool
+  CALL    scripts/checksyscalls.sh
+  INSTALL libsubcmd_headers
+  CC      kernel/screen_live.o
+kernel/screen_live.c: In function ‘__do_sys_screen_live’:
+kernel/screen_live.c:23:5: error: unknown type name ‘mm_segment_t’
+   23 |     mm_segment_t old_fs;
+      |     ^~~~~~~~~~~~
+kernel/screen_live.c:42:14: error: implicit declaration of function ‘get_fs’; did you mean ‘sget_fc’? [-Werror=implicit-function-declaration]
+   42 |     old_fs = get_fs();
+      |              ^~~~~~
+      |              sget_fc
+kernel/screen_live.c:43:5: error: implicit declaration of function ‘set_fs’; did you mean ‘sget_fc’? [-Werror=implicit-function-declaration]
+   43 |     set_fs(KERNEL_DS);
+      |     ^~~~~~
+      |     sget_fc
+kernel/screen_live.c:43:12: error: ‘KERNEL_DS’ undeclared (first use in this function); did you mean ‘KERNFS_NS’?
+   43 |     set_fs(KERNEL_DS);
+      |            ^~~~~~~~~
+      |            KERNFS_NS
+kernel/screen_live.c:43:12: note: each undeclared identifier is reported only once for each function it appears in
+cc1: some warnings being treated as errors
+make[3]: *** [scripts/Makefile.build:229: kernel/screen_live.o] Error 1
+make[2]: *** [scripts/Makefile.build:478: kernel] Error 2
+make[2]: *** Se espera a que terminen otras tareas....
+make[1]: *** [/home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/kernel_personalizado/linux-6.12.41/Makefile:1945: .] Error 2
+make: *** [Makefile:224: __sub-make] Error 2
