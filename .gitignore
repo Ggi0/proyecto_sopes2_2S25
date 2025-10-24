@@ -1,5 +1,7 @@
 kernel_personalizado/
 
+backend/Crow/
+backend/build/
 
 #linux-6.12.41
 #   arch
