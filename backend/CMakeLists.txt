@@ -1,52 +1,72 @@
 cmake_minimum_required(VERSION 3.15)
-project(MiBackend CXX)
+project(USACRemoteDesktop 
+    VERSION 1.0.0
+    LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Incluir Crow
+# ==================== Dependencias ====================
 add_subdirectory(Crow)
-
-# Flags de compilación
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-
-# Incluir directorios
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/Crow/include)
-
-# Encontrar OpenSSL (para Base64)
 find_package(OpenSSL REQUIRED)
+find_package(Threads REQUIRED)
 
-# Archivos fuente
-set(SOURCES
-    src/main.cpp
+# ==================== Sources ====================
+set(SYSCALLS_SOURCES
     src/syscalls/screen_live.cpp
     src/syscalls/mouse_tracking.cpp
     src/syscalls/mouse_action.cpp
     src/syscalls/keyboard_caption.cpp
     src/syscalls/resources_pc.cpp
+)
+
+set(HANDLERS_SOURCES
     src/handlers/websocket_handler.cpp
     src/handlers/http_handler.cpp
+)
+
+set(UTILS_SOURCES
     src/utils/base64.cpp
 )
 
-# Tu ejecutable
-add_executable(servidor ${SOURCE})
-
-# Enlazar con Crow
-target_link_libraries(servidor PRIVATE Crow::Crow)
-
-# Incluir tus propios headers si los necesitas
-target_include_directories(servidor PRIVATE include)
-
-# Si necesitas threads para WebSocket
-find_package(Threads REQUIRED)
-target_link_libraries(servidor PRIVATE Threads::Threads)
-
-
-# Enlazar librerías
-target_link_libraries(servidor
-    pthread
-    OpenSSL::SSL
-    OpenSSL::Crypto
+# ==================== Ejecutable ====================
+add_executable(servidor 
+    src/main.cpp
+    ${SYSCALLS_SOURCES}
+    ${HANDLERS_SOURCES}
+    ${UTILS_SOURCES}
 )
+
+# ==================== Headers ====================
+target_include_directories(servidor 
+    PRIVATE 
+        ${CMAKE_SOURCE_DIR}/include
+)
+
+# ==================== Linkeo ====================
+target_link_libraries(servidor 
+    PRIVATE 
+        Crow::Crow
+        Threads::Threads
+        OpenSSL::SSL
+        OpenSSL::Crypto
+)
+
+# ==================== Flags de compilación ====================
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(servidor PRIVATE 
+        -Wall 
+        -Wextra 
+        -Wpedantic
+    )
+endif()
+
+# Mensaje de configuración
+message(STATUS "===========================================")
+message(STATUS "USAC Linux Remote Desktop - Backend")
+message(STATUS "Versión: ${PROJECT_VERSION}")
+message(STATUS "Compilador: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "===========================================")
