@@ -1,5 +1,6 @@
 #include "syscalls/mouse_tracking.h"
 #include <unistd.h>
+#include "syscalls.h"
 #include <sys/syscall.h>
 #include <iostream>
 

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <cstring>
 
+#include "syscalls.h"
+
 namespace Syscalls {
 
 int getSystemResources(system_resources& resources) {

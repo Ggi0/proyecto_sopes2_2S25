@@ -7,6 +7,9 @@
 #include <fstream>
 #include <cstdlib>
 
+#include "syscalls.h"
+
+
 namespace Syscalls {
 
 int captureScreen(std::vector<unsigned char>& raw_data, screen_capture_info& info) {

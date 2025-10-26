@@ -2,6 +2,7 @@
 #include "syscalls/mouse_tracking.h"
 #include <unistd.h>
 #include <sys/syscall.h>
+#include "syscalls.h"
 #include <iostream>
 
 namespace Syscalls {

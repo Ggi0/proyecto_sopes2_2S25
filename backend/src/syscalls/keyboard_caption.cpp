@@ -4,6 +4,8 @@
 #include <iostream>
 #include <map>
 #include <cctype>
+#include "syscalls.h"
+
 
 namespace Syscalls {
 

@@ -81,18 +81,19 @@ int main() {
     
     // ==================== WEBSOCKET ====================
     
-    CROW_WEBSOCKET_ROUTE(app, "/ws")
-        .onopen([](crow::websocket::connection& conn) {
-            std::cout << " Cliente WebSocket conectado" << std::endl;
-            ws_handler->addConnection(conn);
-        })
-        .onclose([](crow::websocket::connection& conn, const std::string& reason) {
-            std::cout << " Cliente WebSocket desconectado: " << reason << std::endl;
-            ws_handler->removeConnection(conn);
-        })
-        .onmessage([](crow::websocket::connection& conn, const std::string& message, bool is_binary) {
-            ws_handler->handleMessage(conn, message);
-        });
+CROW_WEBSOCKET_ROUTE(app, "/ws")
+    .onopen([](crow::websocket::connection& conn) {
+        std::cout << " Cliente WebSocket conectado" << std::endl;
+        ws_handler->addConnection(conn);
+    })
+    .onclose([](crow::websocket::connection& conn, const std::string& reason, uint16_t code) {
+        std::cout << " Cliente WebSocket desconectado (código " << code << "): " << reason << std::endl;
+        ws_handler->removeConnection(conn);
+    })
+    .onmessage([](crow::websocket::connection& conn, const std::string& message, bool /*is_binary*/) {
+        ws_handler->handleMessage(conn, message);
+    });
+
     
     // Iniciar el handler de WebSocket
     ws_handler->start();
