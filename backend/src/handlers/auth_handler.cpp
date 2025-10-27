@@ -91,6 +91,8 @@ crow::response AuthHandler::handleLogout(const crow::request& req) {
 bool AuthHandler::checkPermissions(const crow::request& req, AccessLevel required_level) {
     // Extraer token del header Authorization
     std::string token = extractToken(req);
+
+    (void)required_level;
     
     if (token.empty()) {
         return false;

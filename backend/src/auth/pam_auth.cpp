@@ -10,6 +10,8 @@
 #include <iomanip>
 #include <openssl/sha.h>
 
+#include <algorithm>
+
 namespace Auth {
 
 // Estructura para pasar credenciales a PAM

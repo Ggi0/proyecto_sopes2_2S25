@@ -30,6 +30,9 @@ void WebSocketHandler::handleMessage(crow::websocket::connection& conn,
                                      const std::string& message) {
     std::cout << " Mensaje recibido: " << message << std::endl;
     
+    (void)conn;
+
+    
     // Aquí podrías parsear comandos del cliente si es necesario
     auto json_msg = crow::json::load(message);
     
