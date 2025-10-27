@@ -3,6 +3,7 @@
 #include "crow/middlewares/cors.h"
 #include "handlers/websocket_handler.h"
 #include "handlers/http_handler.h"
+#include "handlers/auth_handler.h"
 #include "types.h"
 #include <iostream>
 #include <csignal>
