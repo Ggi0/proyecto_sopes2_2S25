@@ -51,8 +51,8 @@ getent group remote_control
 # Crear usuario
 sudo useradd -m -s /bin/bash admin
 
-# Establecer contraseña "123"
-echo "admin:123" | sudo chpasswd
+# Establecer contraseña "---"
+echo "admin:---" | sudo chpasswd
 
 # Agregar al grupo remote_control
 sudo usermod -aG remote_control admin
