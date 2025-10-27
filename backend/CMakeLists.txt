@@ -14,6 +14,10 @@ find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
 
 # ==================== Sources ====================
+set(AUTH_SOURCES
+    src/auth/pam_auth.cpp
+)
+
 set(SYSCALLS_SOURCES
     src/syscalls/screen_live.cpp
     src/syscalls/mouse_tracking.cpp
@@ -23,6 +27,7 @@ set(SYSCALLS_SOURCES
 )
 
 set(HANDLERS_SOURCES
+    src/handlers/auth_handler.cpp
     src/handlers/websocket_handler.cpp
     src/handlers/http_handler.cpp
 )
@@ -34,16 +39,19 @@ set(UTILS_SOURCES
 # ==================== Ejecutable ====================
 add_executable(servidor 
     src/main.cpp
+    ${AUTH_SOURCES}
     ${SYSCALLS_SOURCES}
     ${HANDLERS_SOURCES}
     ${UTILS_SOURCES}
 )
+
 
 # ==================== Headers ====================
 target_include_directories(servidor 
     PRIVATE 
         ${CMAKE_SOURCE_DIR}/include
 )
+
 
 # ==================== Linkeo ====================
 target_link_libraries(servidor 
@@ -52,6 +60,7 @@ target_link_libraries(servidor
         Threads::Threads
         OpenSSL::SSL
         OpenSSL::Crypto
+        pam
 )
 
 # ==================== Flags de compilación ====================

@@ -12,35 +12,24 @@ namespace Handlers {
 class HTTPHandler {
 public:
     /**
-     * @brief Maneja solicitud de movimiento del mouse
+     * @brief Maneja click del mouse (mueve + click)
      * 
-     * Espera JSON: {"x": 100, "y": 200}
-     */
-    static crow::response handleMouseMove(const crow::request& req);
-
-    /**
-     * @brief Maneja solicitud de click del mouse
-     * 
-     * Espera JSON: {"x": 100, "y": 200, "button": "left" o "right"}
+     * Espera JSON: {"x": 100, "y": 200, "button": 1}  // 1=izquierdo, 2=derecho
+     * REQUIERE: Autenticación y permisos de FULL_CONTROL
      */
     static crow::response handleMouseClick(const crow::request& req);
 
     /**
      * @brief Maneja presión de una tecla individual
      * 
-     * Espera JSON: {"keycode": 30}
+     * Espera JSON: {"key": "a"} o {"keycode": 30}
+     * REQUIERE: Autenticación y permisos de FULL_CONTROL
      */
     static crow::response handleKeyPress(const crow::request& req);
 
     /**
-     * @brief Maneja escritura de texto completo
-     * 
-     * Espera JSON: {"text": "hola mundo"}
-     */
-    static crow::response handleTypeText(const crow::request& req);
-
-    /**
      * @brief Endpoint de salud del servidor
+     * NO REQUIERE autenticación
      */
     static crow::response handleHealth();
 };
