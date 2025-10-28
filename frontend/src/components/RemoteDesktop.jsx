@@ -69,12 +69,25 @@ const RemoteDesktop = ({ screenshot }) => {
     // Prevenir comportamiento por defecto del navegador
     event.preventDefault();
 
-    const keycode = event.keyCode || event.which;
-    console.log(`Tecla presionada: ${event.key} (keycode: ${keycode})`);
+    let key = event.key;
+
+    // Mapeo de teclas especiales al formato que el backend espera
+    if (key === 'Enter') key = '\n';
+    else if (key === 'Backspace') key = '\b';
+    else if (key === 'Tab') key = '\t';
+    else if (key === ' ') key = ' ';
+
+    // Ignorar teclas especiales que no sean caracteres (como Shift, Alt, etc.)
+    if (key.length !== 1 && key !== '\n' && key !== '\b' && key !== '\t' && key !== ' ') {
+    console.log(`Tecla ignorada: ${event.key}`);
+    return;
+    }
+
+    console.log(`Tecla presionada: ${key}`);
 
     try {
       // Enviar tecla al backend
-      await apiService.keyPress(keycode, token);
+      await apiService.keyPress(key, token);
     } catch (error) {
       console.error('Error al enviar tecla:', error);
     }

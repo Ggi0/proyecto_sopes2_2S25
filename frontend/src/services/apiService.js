@@ -69,13 +69,13 @@ const apiService = {
   },
 
   // Presionar tecla: envía el keycode de la tecla presionada
-  keyPress: async (keycode, token) => {
+  keyPress: async (key, token) => {
     return request('/api/keyboard/press', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ keycode }),
+      body: JSON.stringify({ key }),
     });
   },
 };
