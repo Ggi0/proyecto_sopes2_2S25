@@ -38,7 +38,7 @@ static const std::map<char, int> char_to_keycode = {
     {',', 51}, {'.', 52}, {'/', 53},
     
     // Teclas especiales
-    {'\n', 28}, // Enter
+    {'\n', 96}, // Enter
     {'\t', 15}, // Tab
     {'\b', 14}, // Backspace
 };
