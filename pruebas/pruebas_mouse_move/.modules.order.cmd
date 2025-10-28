@@ -1,1 +1,1 @@
-savedcmd_/home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/modules.order := {   echo /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/vmouse.o; :; } > /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/modules.order
+savedcmd_/home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/pruebas_mouse_move/modules.order := {   echo /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/pruebas_mouse_move/vmouse.o; :; } > /home/vgio/Documentos/sopes2/proyecto_sopes2_2S25/pruebas/pruebas_mouse_move/modules.order
