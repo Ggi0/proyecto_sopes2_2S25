@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <stdlib.h>
+
 
 // Número de tu syscall (ajusta según tu tabla)
-#define SYS_mouse_action 548
+#define SYS_mouse_action 558
 
 int main(int argc, char *argv[]) {
     int button;

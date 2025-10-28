@@ -49,7 +49,8 @@ std::string getResourcesJSON() {
     json_response["type"] = "resources";
     json_response["cpu_usage"] = resources.cpu_usage_percent;
     json_response["ram_usage"] = resources.ram_usage_percent;
-    
+    json_response["ram_total"] = resources.total_ram_mb;
+    json_response["ram_free"] = resources.free_ram_mb ;
     return json_response.dump();
 }
 

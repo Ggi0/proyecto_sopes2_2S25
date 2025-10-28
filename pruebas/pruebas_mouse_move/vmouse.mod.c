@@ -1,20 +1,7 @@
 #include <linux/module.h>
-#define INCLUDE_VERMAGIC
-#include <linux/build-salt.h>
-#include <linux/elfnote-lto.h>
 #include <linux/export-internal.h>
-#include <linux/vermagic.h>
 #include <linux/compiler.h>
 
-#ifdef CONFIG_UNWINDER_ORC
-#include <asm/orc_header.h>
-ORC_HEADER;
-#endif
-
-BUILD_SALT;
-BUILD_LTO_INFO;
-
-MODULE_INFO(vermagic, VERMAGIC_STRING);
 MODULE_INFO(name, KBUILD_MODNAME);
 
 __visible struct module __this_module
@@ -27,47 +14,27 @@ __section(".gnu.linkonce.this_module") = {
 	.arch = MODULE_ARCH_INIT,
 };
 
-#ifdef CONFIG_RETPOLINE
-MODULE_INFO(retpoline, "Y");
-#endif
 
 
-
-static const char ____versions[]
-__used __section("__versions") =
-	"\x14\x00\x00\x00\xc1\xb2\x4a\x4f"
-	"proc_create\0"
-	"\x10\x00\x00\x00\x7e\x3a\x2c\x12"
-	"_printk\0"
-	"\x1c\x00\x00\x00\xca\x39\x82\x5b"
-	"__x86_return_thunk\0\0"
-	"\x1c\x00\x00\x00\xf5\xb6\x0b\xd2"
-	"input_free_device\0\0\0"
-	"\x20\x00\x00\x00\x7d\xff\xb6\x9f"
-	"input_unregister_device\0"
-	"\x1c\x00\x00\x00\x48\x9f\xdb\x88"
-	"__check_object_size\0"
-	"\x18\x00\x00\x00\xc2\x9c\xc4\x13"
-	"_copy_from_user\0"
-	"\x10\x00\x00\x00\xe6\x6e\xab\xbc"
-	"sscanf\0\0"
-	"\x14\x00\x00\x00\xfc\x77\x64\x7f"
-	"input_event\0"
-	"\x28\x00\x00\x00\xb3\x1c\xa2\x87"
-	"__ubsan_handle_out_of_bounds\0\0\0\0"
-	"\x1c\x00\x00\x00\xcb\xf6\xfd\xf0"
-	"__stack_chk_fail\0\0\0\0"
-	"\x14\x00\x00\x00\x52\x4d\x35\x6a"
-	"proc_remove\0"
-	"\x14\x00\x00\x00\xbb\x6d\xfb\xbd"
-	"__fentry__\0\0"
-	"\x20\x00\x00\x00\xb9\x1a\x46\x8d"
-	"input_allocate_device\0\0\0"
-	"\x20\x00\x00\x00\xaf\xb5\x98\x38"
-	"input_register_device\0\0\0"
-	"\x18\x00\x00\x00\xd7\xd3\x75\x6d"
-	"module_layout\0\0\0"
-	"\x00\x00\x00\x00\x00\x00\x00\x00";
+static const struct modversion_info ____versions[]
+__used __section("__versions") = {
+	{ 0x2936d770, "proc_create" },
+	{ 0x122c3a7e, "_printk" },
+	{ 0x5b8239ca, "__x86_return_thunk" },
+	{ 0x45f263c1, "input_free_device" },
+	{ 0xd1932ceb, "input_unregister_device" },
+	{ 0x88db9f48, "__check_object_size" },
+	{ 0x13c49cc2, "_copy_from_user" },
+	{ 0xbcab6ee6, "sscanf" },
+	{ 0xb2a5a491, "input_event" },
+	{ 0x87a21cb3, "__ubsan_handle_out_of_bounds" },
+	{ 0xf0fdf6cb, "__stack_chk_fail" },
+	{ 0xa9d68b1d, "proc_remove" },
+	{ 0xbdfb6dbb, "__fentry__" },
+	{ 0xcf7e92b1, "input_allocate_device" },
+	{ 0x839c356c, "input_register_device" },
+	{ 0xa1987a72, "module_layout" },
+};
 
 MODULE_INFO(depends, "");
 
