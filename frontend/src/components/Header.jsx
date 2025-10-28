@@ -10,6 +10,11 @@ const Header = () => {
     navigate('/login');
   };
 
+  const handleRegistration = () => {
+    logout();
+    navigate('/register');
+  };
+
   return (
     <header style={{ 
       padding: '20px', 
@@ -39,6 +44,10 @@ const Header = () => {
             <button onClick={handleLogout}>
               Cerrar Sesión
             </button>
+
+            <button onClick={handleRegistration}>
+              Registrar Usuario
+            </button>
           </>
         ) : (
           <>
@@ -47,7 +56,7 @@ const Header = () => {
               Iniciar Sesión
             </button>
             <button onClick={() => navigate('/register')}>
-              Registrarse
+              Registrar Usr
             </button>
           </>
         )}
